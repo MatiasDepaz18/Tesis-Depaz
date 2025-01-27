@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import time
 
 # Inicializa MediaPipe FaceLandmarker
 mp_face_mesh = mp.solutions.face_mesh
@@ -19,6 +20,8 @@ if not cap.isOpened():
     exit()
 
 while True:
+    start_time=time.time() #Empieza a contar el tiempo que toma la captura
+
     ret, frame = cap.read()
     if not ret:
         print("Error: No se pudo leer un cuadro de video.")
@@ -44,7 +47,13 @@ while True:
 #            #Esto me hace la malla en los iris (Tal vez no me sirva tanto en un futuro)
 #            mp_drawing.draw_landmarks(
 #                frame,face_landmarks,mp_face_mesh.FACEMESH_IRISES,None,mp_drawing_styles.get_default_face_mesh_iris_connections_style())
-   
+
+
+    # Mide el tiempo de procesamiento
+    end_time = time.time()  # Marca de tiempo final
+    processing_time = (end_time - start_time) * 1000  # Convertir a milisegundos
+    print(f"Tiempo de procesamiento por frame: {processing_time:.2f} ms")
+    
     # Muestra el video
     cv2.imshow("Face Landmarks", frame)
 
