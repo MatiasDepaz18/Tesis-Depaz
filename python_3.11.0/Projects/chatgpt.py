@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time
+from pynput.keyboard import Controller 
 
 # Inicializa MediaPipe FaceMesh
 mp_face_mesh = mp.solutions.face_mesh
@@ -30,6 +31,8 @@ def calculate_ear(landmarks, eye_points):
 LEFT_EYE = [33, 160, 158, 133, 153, 144]
 RIGHT_EYE = [362, 385, 387, 263, 373, 380]
 
+left_eye_was_closed = False
+right_eye_was_closed = False
 while True:
     start_time = time.time()  # Marca de tiempo inicial
     
@@ -47,26 +50,44 @@ while True:
     if results.multi_face_landmarks:
         for face_landmarks in results.multi_face_landmarks:
             landmarks = face_landmarks.landmark
-
+            
             # Calcula EAR para ambos ojos
             left_ear = calculate_ear(landmarks, LEFT_EYE)
             right_ear = calculate_ear(landmarks, RIGHT_EYE)
 
-            # Imprime los valores EAR para depuración
-            print(f"EAR Izquierdo: {left_ear:.2f}, EAR Derecho: {right_ear:.2f}")
+            # Esto me sirve para modificar el rango de ojo abierto o cerrado
 
-            # Determina si los ojos están cerrados
             EAR_THRESHOLD = 0.25
-            left_eye_status = "Cerrado" if left_ear < EAR_THRESHOLD else "Abierto"
-            right_eye_status = "Cerrado" if right_ear < EAR_THRESHOLD else "Abierto"
+            # Determina si los ojos están cerrados
+            left_eye_closed = left_ear < EAR_THRESHOLD
+            right_eye_closed = right_ear < EAR_THRESHOLD
+
+            keyboard = Controller()
+
+            # Detecta transición de abierto a cerrado para cada ojo
+            if left_eye_closed and not left_eye_was_closed:
+                print("🔵 Ojo izquierdo cerrado: presionando tecla 'A'")
+                keyboard.press('a')
+                keyboard.release('a')
+
+            if right_eye_closed and not right_eye_was_closed:
+                print("🟢 Ojo derecho cerrado: presionando tecla 'D'")
+                keyboard.press('d')
+                keyboard.release('d')
+
+            # Actualiza los estados
+            left_eye_was_closed = left_eye_closed
+            right_eye_was_closed = right_eye_closed
 
             # Dibuja el estado del ojo izquierdo
-            cv2.putText(frame, f"Ojo izquierdo: {left_eye_status}", (10, 30), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0) if left_eye_status == "Abierto" else (0, 0, 255), 2)
+            cv2.putText(frame, f"Ojo izquierdo: {'Cerrado' if left_eye_closed else 'Abierto'}", 
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
+                        (0, 255, 0) if not left_eye_closed else (0, 0, 255), 2)
 
             # Dibuja el estado del ojo derecho
-            cv2.putText(frame, f"Ojo derecho: {right_eye_status}", (10, 60), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0) if right_eye_status == "Abierto" else (0, 0, 255), 2)
+            cv2.putText(frame, f"Ojo derecho: {'Cerrado' if right_eye_closed else 'Abierto'}", 
+                        (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
+                        (0, 255, 0) if not right_eye_closed else (0, 0, 255), 2)
 
             # Dibuja los landmarks faciales
             mp_drawing.draw_landmarks(

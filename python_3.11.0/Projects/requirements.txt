@@ -3,5 +3,7 @@ opencv-python-headless
 opencv-python
 mediapipe opencv-python
 opencv-python mediapipe
+pynput="1.7.7"
+
 
 Python versions 3.11.0
