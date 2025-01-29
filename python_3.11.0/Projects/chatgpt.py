@@ -5,7 +5,7 @@ import time
 
 # Inicializa MediaPipe FaceMesh
 mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, min_detection_confidence=0.5)
+face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, refine_landmarks=True ,min_detection_confidence=0.5)
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
@@ -52,20 +52,31 @@ while True:
             left_ear = calculate_ear(landmarks, LEFT_EYE)
             right_ear = calculate_ear(landmarks, RIGHT_EYE)
 
+            # Imprime los valores EAR para depuración
+            print(f"EAR Izquierdo: {left_ear:.2f}, EAR Derecho: {right_ear:.2f}")
+
             # Determina si los ojos están cerrados
             EAR_THRESHOLD = 0.25
             left_eye_status = "Cerrado" if left_ear < EAR_THRESHOLD else "Abierto"
             right_eye_status = "Cerrado" if right_ear < EAR_THRESHOLD else "Abierto"
 
-            # Dibuja el estado del ojo en el cuadro
-            cv2.putText(frame, f"Ojo izquierdo: {left_eye_status}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-            cv2.putText(frame, f"Ojo derecho: {right_eye_status}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            # Dibuja el estado del ojo izquierdo
+            cv2.putText(frame, f"Ojo izquierdo: {left_eye_status}", (10, 30), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0) if left_eye_status == "Abierto" else (0, 0, 255), 2)
+
+            # Dibuja el estado del ojo derecho
+            cv2.putText(frame, f"Ojo derecho: {right_eye_status}", (10, 60), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0) if right_eye_status == "Abierto" else (0, 0, 255), 2)
 
             # Dibuja los landmarks faciales
             mp_drawing.draw_landmarks(
                 frame, face_landmarks, mp_face_mesh.FACEMESH_CONTOURS, None,
                 mp_drawing_styles.get_default_face_mesh_contours_style()
             )
+            #Esto me hace la malla en los iris (Tal vez no me sirva tanto en un futuro)
+            mp_drawing.draw_landmarks(
+                frame,face_landmarks,mp_face_mesh.FACEMESH_IRISES,None,
+                mp_drawing_styles.get_default_face_mesh_iris_connections_style())            
 
     end_time = time.time()
     processing_time = (end_time - start_time) * 1000

@@ -6,7 +6,7 @@ import time
 mp_face_mesh = mp.solutions.face_mesh
 
 # Configura el FaceMesh
-face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, min_detection_confidence=0.5)
+face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1,refine_landmarks=True, min_detection_confidence=0.5)
 
 #Cargo para dibujar bien los contornos
 mp_drawing = mp.solutions.drawing_utils 
@@ -44,9 +44,9 @@ while True:
             mp_drawing.draw_landmarks(
                 frame, face_landmarks, mp_face_mesh.FACEMESH_CONTOURS,None,mp_drawing_styles.get_default_face_mesh_contours_style())
 
-#            #Esto me hace la malla en los iris (Tal vez no me sirva tanto en un futuro)
-#            mp_drawing.draw_landmarks(
-#                frame,face_landmarks,mp_face_mesh.FACEMESH_IRISES,None,mp_drawing_styles.get_default_face_mesh_iris_connections_style())
+            #Esto me hace la malla en los iris (Tal vez no me sirva tanto en un futuro)
+            mp_drawing.draw_landmarks(
+                frame,face_landmarks,mp_face_mesh.FACEMESH_IRISES,None,mp_drawing_styles.get_default_face_mesh_iris_connections_style())
 
 
     # Mide el tiempo de procesamiento
