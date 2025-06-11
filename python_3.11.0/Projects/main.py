@@ -21,6 +21,8 @@ if not cap.isOpened():
 left_eye_pressed = False  # Indica si 'A' está presionada
 right_eye_pressed = False  # Indica si 'D' está presionada
 mouse_pressed = False      #Indica si 'W' esta presionada
+eyesbrow_rigth_pressed=False #Indica si "tecla" esta presionada (ceja derecha levantada)
+eyesbrow_left_pressed=False  #Indica si "tecla" esta presionada (ceja izquierda levantada)
 
 # Función para calcular EAR
 def calculate_ear(landmarks, eye_points):
@@ -31,21 +33,36 @@ def calculate_ear(landmarks, eye_points):
     horizontal = np.linalg.norm(p1 - p4)
     ear = (vertical_1 + vertical_2) / (2.0 * horizontal)
     return ear
+#Funcion para calcular apertura de la boca
 def calcular_mouse(landmarks, mouse_points):
     "Calculare la distancia con la boca cerrada"
     p1, p2= [np.array([landmarks[p].y]) for p in mouse_points]
     mouse_distance=np.linalg.norm(p1 - p2)
     return mouse_distance
+#Funcion para calcular las cejas levantadas
+def calcular_eyesbrow(landmarks,eyesbrow_points,eye_center):
+    "Calculare la distancia de un punto de la ceja con el centro del ojo"
+    p1= np.array([landmarks[p].y for p in eyesbrow_points]) #Tiene solo un elemento pero es por si agrego mas
+    p2= np.array([landmarks[p].y for p in eye_center])
+    print("Cejas:", p1, "Ojos:", p2)  # Debug
+    eyesbrow_distance=np.linalg.norm(p1-p2)
+    print(eyesbrow_distance)
+    return eyesbrow_distance
 
 # Índices de los puntos del ojo izquierdo y derecho
 LEFT_EYE = [33, 160, 158, 133, 153, 144]
 RIGHT_EYE = [362, 385, 387, 263, 373, 380]
 MOUSE=[0,17]
+EYESBROW_RIGHT=[334]
+EYESBROW_LEFT=[105]
+EYE_CENTER_RIGHT=[468]
+EYE_CENTER_LEFT=[473]
 
 #Variables inicializadas para el inicio
 mouse_was_closed=False
 left_eye_was_closed = False
 right_eye_was_closed = False
+
 
 while True:
     start_time = time.time()  # Marca de tiempo inicial
@@ -72,14 +89,20 @@ while True:
             # Calcula la distancia de la boca
             mouse_status= calcular_mouse(landmarks,MOUSE)
 
+            #
+            eyesbrow_right_status=calcular_eyesbrow(landmarks,EYESBROW_RIGHT,EYE_CENTER_RIGHT)
+            eyesbrow_left_status=calcular_eyesbrow(landmarks,EYESBROW_LEFT,EYE_CENTER_LEFT)
+
             # Esto me sirve para modificar el rango de ojo abierto o cerrado
             EAR_THRESHOLD = 0.22
-            MOUSE_THRESHOLD = 0.10
+            MOUSE_THRESHOLD = 0.07
+            EYESBROW_THRESHOLD=0.06
 
             # Determina si los ojos están cerrados
             left_eye_closed = left_ear < EAR_THRESHOLD
             right_eye_closed = right_ear < EAR_THRESHOLD
             mouse_closed = mouse_status < MOUSE_THRESHOLD
+            eyesbrow_right_closed = eyesbrow_right_status < EYESBROW_THRESHOLD
 
             keyboard = Controller()
 
@@ -113,7 +136,9 @@ while True:
             elif not mouse_closed and mouse_pressed:
                 keyboard.press('w')
                 mouse_pressed = False  # Marca que la tecla fue liberada
-                          
+
+            #if eyesbrow_right_closed and not eyesbrow_rigth_pressed:
+                   
             # Actualiza los estados
             left_eye_was_closed = left_eye_closed
             right_eye_was_closed = right_eye_closed
@@ -132,8 +157,12 @@ while True:
             #Pongo la distancia de la boca
             cv2.putText(frame, f"Boca: {'Cerrado' if mouse_closed else 'Abierto'}", 
                         (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
-                        (0, 255, 0) if not left_eye_closed else (0, 0, 255), 2)
+                        (0, 255, 0) if not mouse_closed else (0, 0, 255), 2)
             
+            #Pongo la distancia de la boca
+            cv2.putText(frame, f"Ceja Derecha: {eyesbrow_right_status}", 
+                        (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
+                        (0, 255, 0) if not eyesbrow_right_closed else (0, 0, 255), 2)
             # Dibuja los landmarks faciales
             mp_drawing.draw_landmarks(
                 frame, face_landmarks, mp_face_mesh.FACEMESH_CONTOURS, None,
