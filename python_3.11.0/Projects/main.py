@@ -95,7 +95,7 @@ while True:
 
             # Esto me sirve para modificar el rango de ojo abierto o cerrado
             EAR_THRESHOLD = 0.22
-            MOUSE_THRESHOLD = 0.07
+            MOUSE_THRESHOLD = 0.06
             EYESBROW_THRESHOLD=0.06
 
             # Determina si los ojos están cerrados
@@ -145,12 +145,12 @@ while True:
             mouse_was_closed = mouse_closed
 
             # Dibuja el estado del ojo izquierdo
-            cv2.putText(frame, f"Ojo izquierdo: {'Cerrado' if left_eye_closed else 'Abierto'}", 
+            cv2.putText(frame, f"Ojo derecho: {'Cerrado' if left_eye_closed else 'Abierto'}", 
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
                         (0, 255, 0) if not left_eye_closed else (0, 0, 255), 2)
 
             # Dibuja el estado del ojo derecho
-            cv2.putText(frame, f"Ojo derecho: {'Cerrado' if right_eye_closed else 'Abierto'}", 
+            cv2.putText(frame, f"Ojo izquierdo: {'Cerrado' if right_eye_closed else 'Abierto'}", 
                         (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
                         (0, 255, 0) if not right_eye_closed else (0, 0, 255), 2)
             
