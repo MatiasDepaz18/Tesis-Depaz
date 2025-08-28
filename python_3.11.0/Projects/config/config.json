@@ -1,0 +1,55 @@
+{
+    "usuarios": [
+        {
+            "nombre": "matias",
+            "gestos": {
+                "left_eye": {
+                    "threshold": 0.22,
+                    "tecla": "d"
+                },
+                "right_eye": {
+                    "threshold": 0.22,
+                    "tecla": "a"
+                },
+                "mouth": {
+                    "threshold": 0.06,
+                    "tecla": "w"
+                }
+            }
+        },
+        {
+            "nombre": "Matias Nuevo",
+            "gestos": {
+                "left_eye": {
+                    "threshold": 0.06,
+                    "tecla": "a"
+                },
+                "right_eye": {
+                    "threshold": 0.06,
+                    "tecla": "d"
+                },
+                "mouth": {
+                    "threshold": 0.06,
+                    "tecla": "w"
+                }
+            }
+        },
+        {
+            "nombre": "Yo",
+            "gestos": {
+                "left_eye": {
+                    "threshold": 0.05,
+                    "tecla": "h"
+                },
+                "right_eye": {
+                    "threshold": 0.05,
+                    "tecla": "o"
+                },
+                "mouth": {
+                    "threshold": 0.05,
+                    "tecla": "l"
+                }
+            }
+        }
+    ]
+}

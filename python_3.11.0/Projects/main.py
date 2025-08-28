@@ -11,7 +11,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
 # Inicializa la cámara
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 if not cap.isOpened():
     print("Error: No se pudo abrir la cámara.")
@@ -95,7 +95,7 @@ while True:
 
             # Esto me sirve para modificar el rango de ojo abierto o cerrado
             EAR_THRESHOLD = 0.22
-            MOUSE_THRESHOLD = 0.06
+            MOUSE_THRESHOLD = 0.065
             EYESBROW_THRESHOLD=0.06
 
             # Determina si los ojos están cerrados
@@ -145,17 +145,17 @@ while True:
             mouse_was_closed = mouse_closed
 
             # Dibuja el estado del ojo izquierdo
-            cv2.putText(frame, f"Ojo derecho: {'Cerrado' if left_eye_closed else 'Abierto'}", 
+            cv2.putText(frame, f"Ojo derecho:{left_ear} {'Cerrado' if left_eye_closed else 'Abierto'}", 
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
                         (0, 255, 0) if not left_eye_closed else (0, 0, 255), 2)
 
             # Dibuja el estado del ojo derecho
-            cv2.putText(frame, f"Ojo izquierdo: {'Cerrado' if right_eye_closed else 'Abierto'}", 
+            cv2.putText(frame, f"Ojo izquierdo:{right_ear}{'Cerrado' if right_eye_closed else 'Abierto'}", 
                         (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
                         (0, 255, 0) if not right_eye_closed else (0, 0, 255), 2)
             
             #Pongo la distancia de la boca
-            cv2.putText(frame, f"Boca: {'Cerrado' if mouse_closed else 'Abierto'}", 
+            cv2.putText(frame, f"Boca:{mouse_status} {'Cerrado' if mouse_closed else 'Abierto'}", 
                         (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 
                         (0, 255, 0) if not mouse_closed else (0, 0, 255), 2)
             
