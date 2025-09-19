@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 from tkinter import ttk, messagebox
 import cv2
 from utils.camara_selector import seleccionar_camara_con_nombre
@@ -9,44 +10,98 @@ from config.config_manager import (
     guardar_ultimo_usuario,
     cargar_ultimo_usuario
 )
+from config.config_editor import ConfigEditor  # 👈 usamos el editor externo
 from detector.face_detector_prueba import FaceDetectorPrueba
 from controller.gesture_controller import GestureController
-from logic.metrics import calculate_ear, calculate_mouth_openness
+from logic.metrics import calculate_ear, calculate_mouth_openness,calculate_eyebrow_lift,calculate_roll_deg
+from logic.metrics import calculate_ear, calculate_mouth_openness,calculate_eyebrow_lift,calculate_roll_deg, calculate_pitch_deg
 from utils.constants import *
 import mediapipe as mp
 import time
 from utils.preview_sensibilidades import mostrar_preview
+import os, sys
 
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+GESTO_LABELS = {
+            "left_eye": "Ojo izquierdo",
+            "right_eye": "Ojo derecho",
+            "mouth": "Boca",
+            "eyebrows": "Cejas",  
+            "roll_left": "Cabeza a la IZQUIERDA",
+            "roll_right": "Cabeza a la DERECHA",   
+}
 class LauncherApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Launcher")
-
+        self.root.resizable(False, False)  # <-- Esto deshabilita el agrandado
+        
         self.nombre_usuario = None
         self.gestos_config = None
         self.camera_index = None
 
-        tk.Button(root, text="Elegir Usuario", command=self.abrir_gestion_usuarios, width=30).pack(pady=10)
-        tk.Button(root, text="Elegir Cámara", command=self.elegir_camara, width=30).pack(pady=10)
-        tk.Button(root, text="Iniciar", command=self.iniciar, width=30).pack(pady=10)
+        # Crear un frame horizontal para los botones y la imagen
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(padx=20, pady=20)
+
+        # Frame para los botones (izquierda)
+        btns_frame = tk.Frame(main_frame)
+        btns_frame.pack(side="left", fill="y", anchor="center")
+        tk.Button(btns_frame, text="Elegir Usuario", command=self.abrir_gestion_usuarios, width=30).pack(pady=20)
+        tk.Button(btns_frame, text="Elegir Cámara", command=self.elegir_camara, width=30).pack(pady=20)
+        tk.Button(btns_frame, text="Iniciar", command=self.iniciar, width=30).pack(pady=20)
+
+        # Frame para la imagen (derecha)
+        img_frame = tk.Frame(main_frame)
+        img_frame.pack(side="left", fill="y", padx=20)
+        img = Image.open(resource_path("img/logo.jpg"))
+        img = img.resize((200, 200))
+        img_tk = ImageTk.PhotoImage(img)
+        self.label_img = tk.Label(img_frame, image=img_tk)
+        self.label_img.image = img_tk
+        self.label_img.pack()
 
     def abrir_gestion_usuarios(self):
+        """Ventana para seleccionar usuario y abrir el ConfigEditor externo."""
         win = tk.Toplevel(self.root)
         win.transient(self.root)
         win.grab_set()
         win.focus_set()
         win.title("Gestión de Usuarios")
 
-        usuarios_config = cargar_config()
-        usuarios_nombres = [u["nombre"] for u in usuarios_config["usuarios"]]
+        # UI: selector y botones
+        lista_nombres = [u["nombre"] for u in cargar_config().get("usuarios", [])]
         selected_user = tk.StringVar()
 
         tk.Label(win, text="Seleccionar usuario:").pack(pady=5)
-        user_menu = ttk.Combobox(win, textvariable=selected_user, values=usuarios_nombres, state="readonly")
+        user_menu = ttk.Combobox(win, textvariable=selected_user, values=lista_nombres, state="readonly", width=35)
         user_menu.pack(pady=5)
 
-        frame_botones = tk.Frame(win)
-        frame_botones.pack(pady=5)
+        btns = tk.Frame(win)
+        btns.pack(pady=6)
+
+        def refrescar_lista():
+            nonlocal lista_nombres
+            lista_nombres = [u["nombre"] for u in cargar_config().get("usuarios", [])]
+            user_menu["values"] = lista_nombres
+            if lista_nombres:
+                user_menu.current(0)
+
+        def abrir_editor():
+            """Abre el editor externo en un Toplevel. Al cerrarlo, refresca."""
+            ed = tk.Toplevel(win)
+            ed.title("Editor de Configuración de Usuarios")
+            ConfigEditor(ed)
+            # cuando se cierre el editor, refrescar la lista
+            def on_close():
+                try:
+                    refrescar_lista()
+                finally:
+                    ed.destroy()
+            ed.protocol("WM_DELETE_WINDOW", on_close)
 
         def cargar_usuario():
             nombre = selected_user.get()
@@ -54,10 +109,7 @@ class LauncherApp:
                 messagebox.showerror("Error", "Seleccioná un usuario")
                 return
             usuario = obtener_usuario(nombre)
-            if not usuario:
-                messagebox.showerror("Error", "Usuario no encontrado")
-                return
-            if "gestos" not in usuario:
+            if not usuario or "gestos" not in usuario:
                 messagebox.showerror("Error", f"El usuario '{nombre}' no tiene configuraciones de gestos.")
                 return
             self.nombre_usuario = nombre
@@ -66,84 +118,29 @@ class LauncherApp:
             messagebox.showinfo("OK", f"Usuario '{nombre}' seleccionado correctamente.")
             win.destroy()
 
-        def nuevo_usuario():
-            new_win = tk.Toplevel(win)
-            new_win.transient(win)
-            new_win.grab_set()
-            new_win.focus_set()
-            new_win.title("Nuevo Usuario")
-            tk.Label(new_win, text="Nombre del nuevo usuario:").pack(pady=5)
-            nombre_var = tk.StringVar()
-            tk.Entry(new_win, textvariable=nombre_var).pack(pady=5)
-
-            def crear():
-                nombre = nombre_var.get().strip()
-                if not nombre:
-                    messagebox.showerror("Error", "Nombre vacío")
-                    return
-                if nombre in usuarios_nombres:
-                    messagebox.showerror("Error", "Ese usuario ya existe")
-                    return
-                selected_user.set(nombre)
-                usuarios_nombres.append(nombre)
-                user_menu["values"] = usuarios_nombres
-                crear_o_actualizar_usuario(nombre, {"left_eye": {}, "right_eye": {}, "mouth": {}})
-                messagebox.showinfo("Usuario creado", f"Usuario '{nombre}' creado. Ahora configurá sus gestos.")
-                new_win.destroy()
-
-            tk.Button(new_win, text="Crear", command=crear).pack(pady=5)
-
-        def editar_usuario():
-            nombre = selected_user.get()
-            if not nombre:
-                messagebox.showerror("Error", "Seleccioná un usuario primero")
+        def cargar_ultimo():
+            ultimo = cargar_ultimo_usuario()
+            if not ultimo:
+                messagebox.showinfo("Info", "No hay último usuario guardado.")
                 return
+            usuario = obtener_usuario(ultimo)
+            if not usuario or "gestos" not in usuario:
+                messagebox.showerror("Error", f"El último usuario '{ultimo}' no tiene configuraciones de gestos.")
+                return
+            self.nombre_usuario = ultimo
+            self.gestos_config = usuario["gestos"]
+            if ultimo in lista_nombres:
+                selected_user.set(ultimo)
+            messagebox.showinfo("OK", f"Se cargó el último usuario: {ultimo}")
 
-            editor = tk.Toplevel(win)
-            editor.transient(win)
-            editor.grab_set()
-            editor.focus_set()
-            editor.title(f"Editar Gestos - {nombre}")
-            gestos = ["left_eye", "right_eye", "mouth"]
-            entries = {}
-            teclas = {}
-            user_data = obtener_usuario(nombre) or {"gestos": {}}
+        tk.Button(btns, text="Abrir editor (crear/editar)", command=abrir_editor).grid(row=0, column=0, padx=5)
+        tk.Button(btns, text="Refrescar lista", command=refrescar_lista).grid(row=0, column=1, padx=5)
+        tk.Button(btns, text="Cargar último usuario", command=cargar_ultimo).grid(row=0, column=2, padx=5)
+        tk.Button(win, text="Usar seleccionado", command=cargar_usuario, width=30).pack(pady=10)
 
-            for gesto in gestos:
-                frame = tk.Frame(editor)
-                frame.pack(pady=3)
-                tk.Label(frame, text=gesto).grid(row=0, column=0)
-                tk.Label(frame, text="Threshold:").grid(row=0, column=1)
-                entries[gesto] = tk.Entry(frame, width=10)
-                entries[gesto].grid(row=0, column=2)
-                entries[gesto].insert(0, str(user_data["gestos"].get(gesto, {}).get("threshold", "")))
-                tk.Label(frame, text="Tecla:").grid(row=0, column=3)
-                teclas[gesto] = tk.Entry(frame, width=5)
-                teclas[gesto].grid(row=0, column=4)
-                teclas[gesto].insert(0, user_data["gestos"].get(gesto, {}).get("tecla", ""))
-
-            def guardar():
-                config = {}
-                try:
-                    for gesto in gestos:
-                        threshold = float(entries[gesto].get())
-                        tecla = teclas[gesto].get().strip()
-                        if not tecla:
-                            raise ValueError("Tecla vacía")
-                        config[gesto] = {"threshold": threshold, "tecla": tecla}
-                except ValueError:
-                    messagebox.showerror("Error", "Valores inválidos")
-                    return
-                crear_o_actualizar_usuario(nombre, config)
-                guardar_ultimo_usuario(nombre)
-                messagebox.showinfo("Guardado", f"Configuración guardada para '{nombre}'")
-                editor.destroy()
-            tk.Button(editor, text="Ver sensibilidades", command=mostrar_preview).pack(pady=5)
-            tk.Button(editor, text="Guardar", command=guardar).pack(pady=5)
-
-        tk.Button(frame_botones, text="Usar", command=cargar_usuario).grid(row=0, column=0, padx=5)
-        tk.Button(frame_botones, text="Nuevo", command=nuevo_usuario).grid(row=0, column=1, padx=5)
-        tk.Button(frame_botones, text="Editar", command=editar_usuario).grid(row=0, column=2, padx=5)
+        # inicial
+        if lista_nombres:
+            user_menu.current(0)
 
     def elegir_camara(self):
         index = seleccionar_camara_con_nombre(self.root)
@@ -174,13 +171,44 @@ class LauncherApp:
             if results and results.multi_face_landmarks:
                 for face_landmarks in results.multi_face_landmarks:
                     lm = face_landmarks.landmark
-                    gestures = {
-                        'left_eye': calculate_ear(lm, LEFT_EYE) < self.gestos_config["left_eye"]["threshold"],
-                        'right_eye': calculate_ear(lm, RIGHT_EYE) < self.gestos_config["right_eye"]["threshold"],
-                        'mouth': calculate_mouth_openness(lm, MOUTH) < self.gestos_config["mouth"]["threshold"]
-                    }
-                    controller.update(gestures)
+                    roll_deg = calculate_roll_deg(lm, LEFT_EYE, RIGHT_EYE, frame.shape)
+                    pitch_deg = calculate_pitch_deg(lm, LEFT_EYE, RIGHT_EYE, frame.shape)
+                    thr_roll_left  = self.gestos_config.get("roll_left",  {"threshold": ROLL_THRESHOLD_DEG})["threshold"]
+                    thr_roll_right = self.gestos_config.get("roll_right", {"threshold": ROLL_THRESHOLD_DEG})["threshold"]
 
+                    gestures = {}
+                    for gesto in ["left_eye", "right_eye", "mouth", "roll_left", "roll_right", "pitch_up", "pitch_down"]:
+                        conf = self.gestos_config.get(gesto, {})
+                        if not conf.get("enabled", True):
+                            gestures[gesto] = False
+                        else:
+                            if gesto == "left_eye":
+                                gestures[gesto] = calculate_ear(lm, RIGHT_EYE) < conf["threshold"]
+                            elif gesto == "right_eye":
+                                gestures[gesto] = calculate_ear(lm, LEFT_EYE) < conf["threshold"]
+                            elif gesto == "mouth":
+                                gestures[gesto] = calculate_mouth_openness(lm, MOUTH) > conf["threshold"]
+                            elif gesto == "roll_left":
+                                gestures[gesto] = roll_deg > conf["threshold"]
+                            elif gesto == "roll_right":
+                                gestures[gesto] = roll_deg < -conf["threshold"]
+                            elif gesto == "pitch_up":
+                                gestures[gesto] = pitch_deg < conf["threshold"]
+                            elif gesto == "pitch_down":
+                                gestures[gesto] = pitch_deg > conf["threshold"]
+
+                    # --- Cejas como UN gesto (promedio de izquierda + derecha) ---
+                    left_lift  = calculate_eyebrow_lift(lm, EYEBROW_LEFT,  EYE_CENTER_LEFT)
+                    right_lift = calculate_eyebrow_lift(lm, EYEBROW_RIGHT, EYE_CENTER_RIGHT)
+                    eyebrow_conf = self.gestos_config.get("eyebrows", {"threshold": EYEBROW_THRESHOLD, "enabled": True})
+                    if not eyebrow_conf.get("enabled", True):
+                        gestures["eyebrows"] = False
+                    else:
+                        avg_lift = (left_lift + right_lift) / 2.0
+                        gestures["eyebrows"] = avg_lift > eyebrow_conf["threshold"]
+
+                    controller.update(gestures)
+                    
                     mp_drawing.draw_landmarks(
                         frame, face_landmarks, mp.solutions.face_mesh.FACEMESH_CONTOURS, None,
                         mp_drawing_styles.get_default_face_mesh_contours_style())
@@ -197,7 +225,9 @@ class LauncherApp:
                 break
 
         detector.release()
+        controller.release_all()
         cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
