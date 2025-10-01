@@ -45,7 +45,7 @@ class LauncherApp:
 
         # Crear un frame horizontal para los botones y la imagen
         main_frame = tk.Frame(self.root)
-        main_frame.pack(padx=20, pady=20)
+        main_frame.pack(padx=20, pady=30)
 
         # Frame para los botones (izquierda)
         btns_frame = tk.Frame(main_frame)
@@ -57,12 +57,20 @@ class LauncherApp:
         # Frame para la imagen (derecha)
         img_frame = tk.Frame(main_frame)
         img_frame.pack(side="left", fill="y", padx=20)
-        img = Image.open(resource_path("img/logo.jpg"))
+        img = Image.open(resource_path("img/yoshi.png"))
         img = img.resize((200, 200))
         img_tk = ImageTk.PhotoImage(img)
         self.label_img = tk.Label(img_frame, image=img_tk)
         self.label_img.image = img_tk
         self.label_img.pack()
+        
+        # Centrar la ventana principal
+        self.root.update_idletasks()  # Asegura que la ventana esté completamente creada
+        width = self.root.winfo_reqwidth()
+        height = self.root.winfo_reqheight()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
 
     def abrir_gestion_usuarios(self):
         """Ventana para seleccionar usuario y abrir el ConfigEditor externo."""
@@ -71,6 +79,14 @@ class LauncherApp:
         win.grab_set()
         win.focus_set()
         win.title("Gestión de Usuarios")
+        
+        # Centrar la ventana
+        win.update_idletasks()  # Asegura que la ventana esté completamente creada
+        width = 400
+        height = 200
+        x = (win.winfo_screenwidth() // 2) - (width // 2)
+        y = (win.winfo_screenheight() // 2) - (height // 2)
+        win.geometry(f'{width}x{height}+{x}+{y}')
 
         # UI: selector y botones
         lista_nombres = [u["nombre"] for u in cargar_config().get("usuarios", [])]

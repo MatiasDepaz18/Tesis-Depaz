@@ -66,7 +66,6 @@ class GestureController:
     def _keydown(self, gesture: str):
         label = self.config.get(gesture, {}).get("tecla")
         key_obj = _to_key(label)
-        print(key_obj)
         if not key_obj:
             return
         if gesture in self._down_keys:

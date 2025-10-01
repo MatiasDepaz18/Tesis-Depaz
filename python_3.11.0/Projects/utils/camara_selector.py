@@ -11,6 +11,7 @@ def listar_camaras_con_nombre():
 class CameraSelectorApp:
     def __init__(self, parent):
         self.root = tk.Toplevel(parent)
+        self.root.withdraw()  # Ocultar la ventana inicialmente
         self.root.title("Seleccionar Cámara")
         self.nombres = listar_camaras_con_nombre()
         self.selected_index = None
@@ -34,6 +35,15 @@ class CameraSelectorApp:
 
         # Asegurar limpieza al cerrar con la X
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        
+        # Centrar la ventana y mostrarla
+        self.root.update_idletasks()  # Asegura que la ventana esté completamente creada
+        width = self.root.winfo_reqwidth()
+        height = self.root.winfo_reqheight()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
+        self.root.deiconify()  # Mostrar la ventana ya centrada
 
     # ------ Acciones de UI ------
 

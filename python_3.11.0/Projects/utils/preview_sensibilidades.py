@@ -22,7 +22,6 @@ def draw_text_with_bg(frame, text, pos, color, bg_color=(0,0,0), alpha=0.5):
     cv2.putText(frame, text, (x, y), font, font_scale, color, thickness)
 
 def mostrar_preview(valores = None):
-    print(valores)
     cam_index = seleccionar_camara_con_nombre()
     cap = cv2.VideoCapture(cam_index)
     ear_thr_left = 0.22
@@ -72,8 +71,6 @@ def mostrar_preview(valores = None):
                 left_lift = calculate_eyebrow_lift(lm, EYEBROW_LEFT, EYE_CENTER_LEFT)
                 right_lift = calculate_eyebrow_lift(lm, EYEBROW_RIGHT, EYE_CENTER_RIGHT)
                 avg_lift   = (left_lift + right_lift) / 2.0
-                # Umbral (podés tocarlo o tomarlo del config si querés)
-                eyebrow_thr = EYEBROW_THRESHOLD
                 roll = calculate_roll_deg(lm, LEFT_EYE, RIGHT_EYE, frame.shape) 
                 pitch = calculate_pitch_deg(lm, LEFT_EYE, RIGHT_EYE, frame.shape)
 

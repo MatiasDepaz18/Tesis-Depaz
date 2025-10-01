@@ -46,48 +46,92 @@
             }
         },
         {
-            "nombre": "Matias Nuevo",
+            "nombre": "Matias (MK64)",
             "gestos": {
                 "left_eye": {
                     "threshold": 0.22,
-                    "tecla": "a"
+                    "tecla": "LEFT",
+                    "enabled": true
                 },
                 "right_eye": {
                     "threshold": 0.22,
-                    "tecla": "d"
+                    "tecla": "RIGHT",
+                    "enabled": true
                 },
                 "mouth": {
-                    "threshold": 0.06,
-                    "tecla": "w"
+                    "threshold": 0.092,
+                    "tecla": "UP",
+                    "enabled": true
                 },
                 "eyebrows": {
-                    "threshold": 0.06,
-                    "tecla": "C"
+                    "threshold": 0.07,
+                    "tecla": "C",
+                    "enabled": true
                 },
                 "roll_left": {
                     "threshold": 12.0,
-                    "tecla": "LEFT"
+                    "tecla": "Z",
+                    "enabled": true
                 },
                 "roll_right": {
                     "threshold": 12.0,
-                    "tecla": "RIGHT"
+                    "tecla": "S",
+                    "enabled": true
+                },
+                "pitch_up": {
+                    "threshold": 18.0,
+                    "tecla": "X",
+                    "enabled": true
+                },
+                "pitch_down": {
+                    "threshold": 37.0,
+                    "tecla": "DOWN",
+                    "enabled": true
                 }
             }
         },
         {
-            "nombre": "Yo",
+            "nombre": "Matias (F&W)",
             "gestos": {
                 "left_eye": {
-                    "threshold": 0.05,
-                    "tecla": "h"
+                    "threshold": 0.22,
+                    "tecla": "LEFT",
+                    "enabled": true
                 },
                 "right_eye": {
-                    "threshold": 0.05,
-                    "tecla": "o"
+                    "threshold": 0.22,
+                    "tecla": "RIGHT",
+                    "enabled": true
                 },
                 "mouth": {
-                    "threshold": 0.05,
-                    "tecla": "l"
+                    "threshold": 0.092,
+                    "tecla": "UP",
+                    "enabled": true
+                },
+                "eyebrows": {
+                    "threshold": 0.075,
+                    "tecla": "W",
+                    "enabled": true
+                },
+                "roll_left": {
+                    "threshold": 12.0,
+                    "tecla": "A",
+                    "enabled": true
+                },
+                "roll_right": {
+                    "threshold": 12.0,
+                    "tecla": "D",
+                    "enabled": true
+                },
+                "pitch_up": {
+                    "threshold": 18.0,
+                    "tecla": "X",
+                    "enabled": true
+                },
+                "pitch_down": {
+                    "threshold": 37.0,
+                    "tecla": "DOWN",
+                    "enabled": true
                 }
             }
         }

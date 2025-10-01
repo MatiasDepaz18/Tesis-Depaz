@@ -38,7 +38,10 @@ class ConfigEditor:
     def __init__(self, root):
         self.root = root
         self.root.title("Seleccionar o Crear Usuario")
-
+        
+        # Establecer tamaño mínimo para que siempre aparezca grande
+        self.root.minsize(700, 600)
+        
         self.usuarios_config = cargar_config()
         self.usuarios_nombres = [u["nombre"] for u in self.usuarios_config["usuarios"]]
         self.selected_user = tk.StringVar()
@@ -199,6 +202,15 @@ class ConfigEditor:
 
         self.edit_frame.pack()
         self.action_frame.pack(pady=10)
+        
+        # Recentrar la ventana después de expandirse
+        self.root.update_idletasks()
+        width = self.root.winfo_reqwidth()
+        height = self.root.winfo_reqheight()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
+        
         guardar_ultimo_usuario(nombre)
 
     def nuevo_usuario(self):
@@ -223,6 +235,15 @@ class ConfigEditor:
             new_window.destroy()
             self.edit_frame.pack()
             self.action_frame.pack(pady=10)
+            
+            # Recentrar la ventana después de expandirse
+            self.root.update_idletasks()
+            width = self.root.winfo_reqwidth()
+            height = self.root.winfo_reqheight()
+            x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+            y = (self.root.winfo_screenheight() // 2) - (height // 2)
+            self.root.geometry(f'{width}x{height}+{x}+{y}')
+            
             # limpiar campos
             for gesto in self.gestos:
                 if gesto in ["roll_left", "roll_right"]:
